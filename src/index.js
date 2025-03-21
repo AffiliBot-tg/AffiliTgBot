@@ -126,20 +126,8 @@ bot.start(async (ctx) => {
             }
         }
 
-        await prisma.user.create({
-            data: {
-                userId: user_id,
-                userName: ctx.from.first_name,
-                inviterId: start_payload,
-                lastBonusDate: new Date(2000, 11, 1),
-                botID: data.botID,
-            },
-        });
-    }
+        // const isMember = await checkAccount(ctx);
 
-    const isMember = await checkAccount(ctx);
-
-    if (!isMember) {
         const links = await getLinks();
         const start_text = lang.start(ctx.from.first_name, links);
 
@@ -154,7 +142,7 @@ bot.start(async (ctx) => {
                         [
                             {
                                 text: "✅ Vérifiez",
-                                callback_data: "verify",
+                                callback_data: `verify_${start_payload}`,
                             },
                         ],
                     ],
@@ -689,6 +677,15 @@ bot.on("chat_join_request", async (ctx) => {
     const user_id = ctx.from.id.toString();
     const channel_id = ctx.chatJoinRequest.chat.id.toString();
 
+    const user = await prisma.joinRequests.findFirst({
+        where: {
+            channelId: channel_id,
+            userId: user_id,
+        },
+    });
+
+    if (user) return;
+
     await prisma.joinRequests.create({
         data: {
             channelId: channel_id,
@@ -710,6 +707,16 @@ bot.on("callback_query", async (ctx) => {
 
             return;
         }
+
+        await prisma.user.create({
+            data: {
+                userId: user_id,
+                userName: ctx.from.first_name,
+                inviterId: payload.toString(),
+                lastBonusDate: new Date(2000, 11, 1),
+                botID: data.botID,
+            },
+        });
 
         await ctx.reply(lang.welcome, {
             reply_markup: {
