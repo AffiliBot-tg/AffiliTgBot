@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+model User {
+    id Int @id @default(autoincrement())
+
+    userId         String      @unique
+    userName       String      @default("")
+    invitedUsers   Int         @default(0)
+    inviterId      String      @default("")
+    amount         Int         @default(0)
+    lastBonusDate  DateTime
+    accountNumber  String      @default("")
+    lastUsed       DateTime    @default(now())
+    withdrawalDate DateTime?
+    hasWithdrawn   Boolean     @default(false)
+    lastTaskDate   DateTime?
+    botID          String      @default("init")
+    tasks          UserTasks[]
+
+    status String @default("Idle")
+
+    @@index([inviterId])
+}
+
+model Channels {
+    id String @id @default(cuid())
+
+    tgID              String  @default("")
+    name              String  @default("Test")
+    link              String  @default("")
+    type              String  @default("main")
+    joinRequest       Boolean @default(false)
+    withdrawalChannel Boolean @default(false)
+
+    processStatus String @unique @default(cuid())
+}
+
+model Task {
+    id Int @id @default(autoincrement())
+
+    chatId      String  @default("")
+    link        String  @default("")
+    description String  @default("")
+    priority    Int     @default(1)
+    reward      Int     @default(0)
+    joinRequest Boolean @default(false)
+    type        String  @default("")
+
+    processStatus String @unique @default(cuid())
+}
+
+model UserTasks {
+    id Int @id @default(autoincrement())
+
+    taskId   String
+    tgUserId String
+    status   String @default("new")
+
+    user User @relation(fields: [tgUserId], references: [userId], onDelete: Cascade)
+
+    @@unique([taskId, tgUserId])
+}
+
+model JoinRequests {
+    id Int @id @default(autoincrement())
+
+    channelId String
+    userId    String
+}
