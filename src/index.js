@@ -62,7 +62,7 @@ bot.start(async (ctx) => {
     });
 
     if (!user) {
-        if (start_payload) {
+        if (start_payload && start_payload != "ads") {
             const inviter = await prisma.user.update({
                 where: {
                     userId: start_payload,
@@ -215,6 +215,7 @@ bot.on("message", async (ctx) => {
     if (text === "🔗 Inviter des Amis") {
         await ctx.reply(lang.share(ctx, user), {
             parse_mode: "HTML",
+            link_preview_options: {},
         });
 
         return;
@@ -712,7 +713,7 @@ bot.on("callback_query", async (ctx) => {
             data: {
                 userId: user_id,
                 userName: ctx.from.first_name,
-                inviterId: payload.toString(),
+                inviterId: payload != "ads" ? payload.toString() : "",
                 lastBonusDate: new Date(2000, 11, 1),
                 botID: data.botID,
             },
