@@ -111,7 +111,7 @@ export const lang = {
         return `⚙️ <b>Paramètres du compte :</b>\n\n👤 <b>Nom :</b> ${user.userName}\n🆔 <b>ID :</b> ${user.userId}\n💳 <b>Numéro de retrait :</b> ${user.accountNumber}\n\n📌 <b>Ce numéro sera utilisé pour recevoir tes paiements. </b>\n\n🔽 Clique ci-dessous pour le modifier si nécessaire.`;
     },
     start(first_name, links) {
-        return `Bienvenue <b>${first_name}</b> sur AffiliBot, 🚀\n\nJe peux vous faire gagner jusqu’à 150 000 FCFA 💰 par mois.\n\nPour commencer, vous devez rejoindre tous mes canaux. 📲\n\n${formatLinks(
+        return `Bienvenue <b>${first_name}</b> sur le Bot D'affiliation, 🚀\n\nJe peux vous faire gagner jusqu’à 50 000 FCFA 💰 par mois.\n\nPour commencer, vous devez rejoindre tous mes canaux. 📲\n\n${formatLinks(
             links
         )}`;
     },
