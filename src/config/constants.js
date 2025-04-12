@@ -61,7 +61,7 @@ export const lang = {
 
         return `🚫 Le retrait est possible à partir de <b>${formatNumbers(
             data.minWithdrawal
-        )} FCFA</b>.\n\n📢 Invitez encore <b>${remainingPersons} personne(s)</b> pour débloquer votre retrait et recevoir votre argent ! 💸`;
+        )} FCFA</b>.\n\n📢 Invitez encore <b>${remainingPersons} personne(s)</b> ou <b>complete des tâches</b> pour débloquer votre retrait et recevoir votre argent ! 💸`;
     },
     num: "📌 <b>Ajoutez votre numéro de retrait pour recevoir vos gains !</b>\n\nCliquez sur ‘📌 Ajouter un numéro’ et sécurisez vos futurs paiements.",
     withdrawEx:

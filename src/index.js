@@ -62,28 +62,34 @@ bot.start(async (ctx) => {
     });
 
     if (!user) {
-        if (start_payload && start_payload != "ads") {
-            const inviter = await prisma.user.update({
+        if (start_payload && Boolean(Number(start_payload))) {
+            const inviter = await prisma.user.findFirst({
                 where: {
                     userId: start_payload,
                 },
-                data: {
-                    invitedUsers: {
-                        increment: 1,
-                    },
-                    amount: {
-                        increment: data.firstRefAmount,
-                    },
-                },
-                select: {
-                    userName: true,
-                    inviterId: true,
-                    userId: true,
-                    withdrawalDate: true,
-                },
             });
 
-            if (inviter.inviterId) {
+            if (inviter) {
+                await prisma.user.update({
+                    where: {
+                        userId: start_payload,
+                    },
+                    data: {
+                        invitedUsers: {
+                            increment: 1,
+                        },
+                        amount: {
+                            increment: data.firstRefAmount,
+                        },
+                    },
+                    select: {
+                        userName: true,
+                        inviterId: true,
+                        userId: true,
+                        withdrawalDate: true,
+                    },
+                });
+
                 const inviterId = inviter.inviterId.toString();
 
                 const { withdrawalDate } = await prisma.user.update({
@@ -109,20 +115,20 @@ bot.start(async (ctx) => {
                         }
                     );
                 }
-            }
 
-            await ctx.reply(
-                `🎉 Vous avez été invité(e) par ${inviter.userName} !`
-            );
-
-            if (!is7DaysOrMorePast(inviter.withdrawalDate || "")) {
-                await ctx.telegram.sendMessage(
-                    inviter.userId,
-                    `Félicitations ! 🎉 Vous venez d'inviter un joueur <b>+${data.firstRefAmount} FCFA</b> sur votre compte ! Continuez à cumuler les récompenses ! 💰🔥`,
-                    {
-                        parse_mode: "HTML",
-                    }
+                await ctx.reply(
+                    `🎉 Vous avez été invité(e) par ${inviter.userName} !`
                 );
+
+                if (!is7DaysOrMorePast(inviter.withdrawalDate || "")) {
+                    await ctx.telegram.sendMessage(
+                        inviter.userId,
+                        `Félicitations ! 🎉 Vous venez d'inviter un joueur <b>+${data.firstRefAmount} FCFA</b> sur votre compte ! Continuez à cumuler les récompenses ! 💰🔥`,
+                        {
+                            parse_mode: "HTML",
+                        }
+                    );
+                }
             }
         }
 
