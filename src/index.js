@@ -215,7 +215,9 @@ bot.on("message", async (ctx) => {
     if (text === "🔗 Inviter des Amis") {
         await ctx.reply(lang.share(ctx, user), {
             parse_mode: "HTML",
-            link_preview_options: {},
+            link_preview_options: {
+                is_disabled: true,
+            },
         });
 
         return;
