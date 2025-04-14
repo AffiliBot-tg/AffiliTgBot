@@ -62,80 +62,6 @@ bot.start(async (ctx) => {
     });
 
     if (!user) {
-        if (start_payload && Boolean(Number(start_payload))) {
-            const inviter = await prisma.user.findFirst({
-                where: {
-                    userId: start_payload,
-                },
-            });
-
-            if (inviter) {
-                await prisma.user.update({
-                    where: {
-                        userId: start_payload,
-                    },
-                    data: {
-                        invitedUsers: {
-                            increment: 1,
-                        },
-                        amount: {
-                            increment: data.firstRefAmount,
-                        },
-                    },
-                    select: {
-                        userName: true,
-                        inviterId: true,
-                        userId: true,
-                        withdrawalDate: true,
-                    },
-                });
-
-                if (!is7DaysOrMorePast(inviter.withdrawalDate || "")) {
-                    await ctx.telegram.sendMessage(
-                        inviter.userId,
-                        `Félicitations ! 🎉 Vous venez d'inviter un joueur <b>+${data.firstRefAmount} FCFA</b> sur votre compte ! Continuez à cumuler les récompenses ! 💰🔥`,
-                        {
-                            parse_mode: "HTML",
-                        }
-                    );
-                }
-
-                const inviterId = inviter.inviterId.toString();
-
-                if (inviterId) {
-                    const { withdrawalDate } = await prisma.user.update({
-                        where: {
-                            userId: inviterId,
-                        },
-                        data: {
-                            amount: {
-                                increment: data.secondRefAmount,
-                            },
-                        },
-                        select: {
-                            withdrawalDate: true,
-                        },
-                    });
-
-                    if (!is7DaysOrMorePast(withdrawalDate || "")) {
-                        await ctx.telegram.sendMessage(
-                            inviterId,
-                            `Bonne nouvelle ! 🎉 Un ami que vous avez invité a parrainé un joueur, vous gagnez <b>+${data.secondRefAmount} FCFA !</b> Continuez à cumuler les récompenses ! 💰🔥`,
-                            {
-                                parse_mode: "HTML",
-                            }
-                        );
-                    }
-                }
-
-                await ctx.reply(
-                    `🎉 Vous avez été invité(e) par ${inviter.userName} !`
-                );
-            }
-        }
-
-        // const isMember = await checkAccount(ctx);
-
         const links = await getLinks();
         const start_text = lang.start(ctx.from.first_name, links);
 
@@ -723,7 +649,7 @@ bot.on("callback_query", async (ctx) => {
             data: {
                 userId: user_id,
                 userName: ctx.from.first_name,
-                inviterId: payload != "ads" ? payload.toString() : "",
+                inviterId: Boolean(Number(payload)) ? payload : "",
                 lastBonusDate: new Date(2000, 11, 1),
                 botID: data.botID,
             },
@@ -737,6 +663,80 @@ bot.on("callback_query", async (ctx) => {
         });
 
         await ctx.deleteMessage();
+
+        if (payload && Boolean(Number(payload))) {
+            const inviter = await prisma.user.findFirst({
+                where: {
+                    userId: payload,
+                },
+            });
+
+            if (inviter) {
+                await prisma.user.update({
+                    where: {
+                        userId: payload,
+                    },
+                    data: {
+                        invitedUsers: {
+                            increment: 1,
+                        },
+                        amount: {
+                            increment: data.firstRefAmount,
+                        },
+                    },
+                    select: {
+                        userName: true,
+                        inviterId: true,
+                        userId: true,
+                        withdrawalDate: true,
+                    },
+                });
+
+                if (!is7DaysOrMorePast(inviter.withdrawalDate || "")) {
+                    await ctx.telegram.sendMessage(
+                        inviter.userId,
+                        `Félicitations ! 🎉 Vous venez d'inviter un joueur <b>+${data.firstRefAmount} FCFA</b> sur votre compte ! Continuez à cumuler les récompenses ! 💰🔥`,
+                        {
+                            parse_mode: "HTML",
+                        }
+                    );
+                }
+
+                const inviterId = inviter.inviterId;
+
+                const inviterParent = await prisma.user.findFirst({
+                    where: {
+                        userId: inviterId.toString(),
+                    },
+                });
+
+                if (inviterParent) {
+                    const { withdrawalDate } = await prisma.user.update({
+                        where: {
+                            userId: inviterParent.userId.toString(),
+                        },
+                        data: {
+                            amount: {
+                                increment: data.secondRefAmount,
+                            },
+                        },
+                        select: {
+                            withdrawalDate: true,
+                        },
+                    });
+
+                    if (!is7DaysOrMorePast(withdrawalDate || "")) {
+                        await ctx.telegram.sendMessage(
+                            inviterParent.userId,
+                            `Bonne nouvelle ! 🎉 Un ami que vous avez invité a parrainé un joueur, vous gagnez <b>+${data.secondRefAmount} FCFA !</b> Continuez à cumuler les récompenses ! 💰🔥`,
+                            {
+                                parse_mode: "HTML",
+                            }
+                        );
+                    }
+                }
+            }
+        }
 
         return;
     }
@@ -1344,9 +1344,9 @@ bot.on("callback_query", async (ctx) => {
 });
 
 bot.catch(async (err, ctx) => {
-    await ctx.telegram.sendMessage(ADMIN, `${err}\n\n${new Date()}`);
-
     console.log(err);
+
+    await ctx.telegram.sendMessage(ADMIN, `${err}\n\n${new Date()}`);
 });
 
 // bot.launch(() => {
